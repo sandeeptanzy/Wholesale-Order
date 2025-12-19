@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Wholesale Order Form</title>
+
+<!-- ================== CSS ================== -->
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+  padding: 20px;
+}
+h2, h3 {
+  margin-top: 30px;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  background: #fff;
+  margin-bottom: 40px;
+}
+th, td {
+  border: 1px solid #999;
+  padding: 4px;
+  text-align: center;
+  font-size: 12px;
+}
+th {
+  background: #2f5d50;
+  color: white;
+}
+input[type="number"] {
+  width: 50px;
+}
+.header-box input {
+  margin: 5px;
+  padding: 6px;
+}
+button {
+  padding: 10px 20px;
+  font-size: 15px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  table { font-size: 10px; }
+  input[type="number"] { width: 40px; }
+  .header-box input {
+    display: block;
+    width: 100%;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<h2>Wholesale Order Form</h2>
+
+<!-- ================== HEADER ================== -->
+<div class="header-box">
+  <input id="customer" placeholder="Customer Name">
+  <input id="place" placeholder="Place">
+  <input id="transport" placeholder="Transport">
+  <input id="date" type="date">
+</div>
+
+<!-- ================== PRODUCTS ================== -->
+<div id="products"></div>
+
+<!-- ================== BUTTONS ================== -->
+<button onclick="generateExcel()">Download Excel</button>
+<button onclick="generatePDF()">Download PDF</button>
+
+
+<!-- ================== LIBRARIES ================== -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<!-- ================== JAVASCRIPT ================== -->
+<script>
+document.getElementById("date").valueAsDate = new Date();
+
+const products = [
+{
+  name: "Chudithar Full Length",
+  sizes: ["M/L","XL/XXL","3XL"],
+  colors: ["GOLDEN YELLOW","WHITE","BLACK","RANI","ORANGE","CORAL","BOTTLE GREEN","MAROON","WINE","PAK. GREEN","FERRARI RED","ROYAL BLUE","SKIN","T. BLUE","STEEL GREY","D. NAVY","PARROT GREEN","BEIGE PURE","CHERRY","COFFEE BROWN","MAGENTA","MINT GREEN","OLIVE","LT. NAVY","RELIANCE GREEN","CREAM","AQUA BLUE","PURPLE","B. PINK","PETROL BLUE","HONEY","LT. COREL","RUST BROWN","LILAC","MEHANDI","MASTARD","CHIKKU","PEACH","ELEPHANT GRAY","STONE"]
+
+},
+{
+  name: "Ankle Length",
+  sizes: ["M/L","XL/XXL"],
+  colors: ["GOLDEN YELLOW","WHITE","BLACK","RANI","ORANGE","CORAL","BOTTLE GREEN","MAROON","WINE","PAK. GREEN","FERRARI RED","ROYAL BLUE","SKIN","T. BLUE","STEEL GREY","D. NAVY","PARROT GREEN","BEIGE PURE","CHERRY","COFFEE BROWN","MAGENTA","MINT GREEN","OLIVE","LT. NAVY","RELIANCE GREEN","CREAM","AQUA BLUE","PURPLE","B. PINK","PETROL BLUE","HONEY","LT. COREL","RUST BROWN","LILAC","MEHANDI","MASTARD","CHIKKU","PEACH","ELEPHANT GRAY","STONE"]
+
+},
+{
+  name: "Shimmer",
+  sizes: ["S","M","L","XL","2XL","3XL"],
+  colors: ["WHITE","BLACK","NAVY DIAMOND","GOLD DUST","ONION PINK","COPPER",
+           "RED VELVET","SOUL GEM","GLAM PINK","SILVER COIN",
+           "DARK MAROON","SKIN","GOLD MINE","DARK GOLD"]
+},
+{
+  name: "Belt Ankle Length",
+  sizes: ["M","L","XL","2XL","3XL"],
+  colors: ["WHITE","BLACK","RANI","CORAL","BOTTLE GREEN","MAROON","WINE",
+           "F.RED","SKIN","STEEL GREY","NAVY","COFFEE BROWN",
+           "CREAM","RE.GREEN","MEHANDI","CHIKKU","STONE","AQUA BLUE"]
+},
+{
+  name: "Casual Pant",
+  sizes: ["S/M","L/XL","2XL"],
+  colors: ["WHITE","BLACK","PEACH","BOTTLE GREEN","RED","WINE",
+           "STEEL GREY","NAVY","MAROON","BEIGE","PURE CREAM","GOLD"]
+},
+{
+  name: "Palazzo Pant",
+  sizes: ["S/M","L/XL","2XL"],
+  colors: ["WHITE","BLACK","PEACH","BOTTLE GREEN","RED","WINE",
+           "STEEL GREY","NAVY","MAROON","BEIGE","PURE CREAM","GOLD"]
+}
+];
+
+function renderProducts() {
+  let html = "";
+  products.forEach((p, pi) => {
+    html += `<h3>${p.name}</h3><table><tr>
+      <th>NO</th><th>COLOUR</th>`;
+    p.sizes.forEach(s => html += `<th>${s}</th>`);
+    html += `<th>TOTAL</th></tr>`;
+
+    p.colors.forEach((c, ci) => {
+      html += `<tr>
+        <td>${ci + 1}</td>
+        <td>${c}</td>`;
+      p.sizes.forEach((_, si) => {
+        html += `<td>
+          <input type="number" min="0"
+            data-p="${pi}" data-c="${ci}" data-s="${si}">
+        </td>`;
+      });
+      html += `<td class="row-total">0</td></tr>`;
+    });
+
+    html += `</table>`;
+  });
+  document.getElementById("products").innerHTML = html;
+}
+
+document.addEventListener("input", e => {
+  if (e.target.type === "number") {
+    const row = e.target.closest("tr");
+    let total = 0;
+    row.querySelectorAll("input").forEach(i => total += Number(i.value || 0));
+    row.querySelector(".row-total").innerText = total;
+  }
+});
+
+renderProducts();
+
+/* ================== EXCEL ================== */
+function generateExcel() {
+  const wb = XLSX.utils.book_new();
+
+  const customer  = document.getElementById("customer").value || "";
+  const place     = document.getElementById("place").value || "";
+  const transport = document.getElementById("transport").value || "";
+  const date      = document.getElementById("date").value || "";
+
+  products.forEach((p, pi) => {
+
+    const colCount = p.sizes.length + 3; // NO + COLOUR + sizes + TOTAL
+
+    let data = [
+      [`Customer Name : ${customer}`],
+      [`Place : ${place}`],
+      [`Transport : ${transport}`],
+      [`Date : ${date}`],
+      [],
+      ["NO", "COLOUR", ...p.sizes, "TOTAL"]
+    ];
+
+    let sizeTotals = new Array(p.sizes.length).fill(0);
+    let productTotal = 0;
+
+    p.colors.forEach((c, ci) => {
+      let row = [ci + 1, c];
+      let rowTotal = 0;
+
+      p.sizes.forEach((_, si) => {
+        const input = document.querySelector(
+          `input[data-p="${pi}"][data-c="${ci}"][data-s="${si}"]`
+        );
+        const val = Number(input.value || 0);
+        row.push(val || "");
+        rowTotal += val;
+        sizeTotals[si] += val;
+      });
+
+      if (rowTotal > 0) {
+        row.push(rowTotal);
+        data.push(row);
+        productTotal += rowTotal;
+      }
+    });
+
+    let totalRow = ["", "TOTAL"];
+    sizeTotals.forEach(t => totalRow.push(t));
+    totalRow.push(productTotal);
+    data.push(totalRow);
+
+    const ws = XLSX.utils.aoa_to_sheet(data);
+
+    /* ===== MERGE HEADER CELLS ===== */
+    ws["!merges"] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: colCount - 1 } },
+      { s: { r: 1, c: 0 }, e: { r: 1, c: colCount - 1 } },
+      { s: { r: 2, c: 0 }, e: { r: 2, c: colCount - 1 } },
+      { s: { r: 3, c: 0 }, e: { r: 3, c: colCount - 1 } }
+    ];
+
+    /* ===== STYLES ===== */
+    const headerStyle = {
+      font: { bold: true, sz: 12 },
+      alignment: { vertical: "center", horizontal: "left" }
+    };
+
+    const tableHeaderStyle = {
+      font: { bold: true },
+      alignment: { horizontal: "center" },
+      fill: { fgColor: { rgb: "D9EAD3" } },
+      border: {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" }
+      }
+    };
+
+    // Apply header styles
+    ["A1","A2","A3","A4"].forEach(cell => {
+      if (ws[cell]) ws[cell].s = headerStyle;
+    });
+
+    // Apply table header styles (row 6)
+    for (let c = 0; c < colCount; c++) {
+      const cellRef = XLSX.utils.encode_cell({ r: 5, c });
+      if (ws[cellRef]) ws[cellRef].s = tableHeaderStyle;
+    }
+
+    ws["!cols"] = [
+      { wch: 6 },
+      { wch: 25 },
+      ...p.sizes.map(() => ({ wch: 10 })),
+      { wch: 12 }
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, p.name.substring(0, 31));
+  });
+
+  XLSX.writeFile(wb, "Wholesale_Order.xlsx");
+}
+
+function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF("p", "pt", "a4"); // Portrait, points, A4
+
+  const customer  = document.getElementById("customer").value || "";
+  const place     = document.getElementById("place").value || "";
+  const transport = document.getElementById("transport").value || "";
+  const date      = document.getElementById("date").value || "";
+
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  products.forEach((p, pi) => {
+    if (pi > 0) doc.addPage();
+
+    // Customer Info at Top
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Customer Name: ${customer}`, 40, 40);
+    doc.text(`Place: ${place}`, 40, 60);
+    doc.text(`Transport: ${transport}`, 40, 80);
+    doc.text(`Date: ${date}`, 40, 100);
+
+    // Prepare table data
+    const tableColumn = ["NO", "COLOUR", ...p.sizes, "TOTAL"];
+    const tableRows = [];
+
+    let sizeTotals = new Array(p.sizes.length).fill(0);
+    let productTotal = 0;
+
+    p.colors.forEach((c, ci) => {
+      let row = [ci + 1, c];
+      let rowTotal = 0;
+
+      p.sizes.forEach((_, si) => {
+        const input = document.querySelector(
+          `input[data-p="${pi}"][data-c="${ci}"][data-s="${si}"]`
+        );
+        const val = Number(input.value || 0);
+        row.push(val || "");
+        rowTotal += val;
+        sizeTotals[si] += val;
+      });
+
+      if (rowTotal > 0) {
+        row.push(rowTotal);
+        tableRows.push(row);
+        productTotal += rowTotal;
+      }
+    });
+
+    // Add total row
+    const totalRow = ["", "TOTAL"];
+    sizeTotals.forEach(t => totalRow.push(t));
+    totalRow.push(productTotal);
+    tableRows.push(totalRow);
+
+    // Draw table with full borders
+    doc.autoTable({
+      startY: 130,
+      head: [tableColumn],
+      body: tableRows,
+      theme: 'grid',               // grid theme automatically adds cell borders
+      headStyles: { 
+        fillColor: [45, 93, 80], 
+        textColor: 255, 
+        halign: 'center',
+        lineWidth: 0.5,           // header border width
+        lineColor: 0               // black border
+      },
+      bodyStyles: { 
+        halign: 'center', 
+        lineWidth: 0.5,            // cell border width
+        lineColor: 0
+      },
+      columnStyles: {
+        1: { halign: 'left' }     // Color column aligned left
+      },
+      styles: { fontSize: 10 }
+    });
+
+    // Add product title above table
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text(p.name, pageWidth / 2, 120, { align: "center" });
+  });
+
+  doc.save("Wholesale_Order.pdf");
+}
+
+</script>
+
+</body>
+</html>
